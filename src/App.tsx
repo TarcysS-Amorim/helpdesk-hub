@@ -28,22 +28,39 @@ import CustomerTickets from "./pages/customer/CustomerTickets";
 
 const queryClient = new QueryClient();
 
+// Redireciona baseado no role do usuário
 function RoleBasedRedirect() {
   const { profile, loading, user } = useAuth();
 
+  // Ainda carregando? Mostra nada
   if (loading) {
-    return null;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-4xl animate-pulse">⏳</div>
+      </div>
+    );
   }
 
+  // Não logado? Vai pro login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (profile?.role === 'ADMIN') {
+  // Esperando profile carregar
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-4xl animate-pulse">🔄</div>
+      </div>
+    );
+  }
+
+  // Redireciona baseado no role
+  if (profile.role === 'ADMIN') {
     return <Navigate to="/admin" replace />;
   }
 
-  if (profile?.role === 'TECH') {
+  if (profile.role === 'TECH') {
     return <Navigate to="/tech" replace />;
   }
 
@@ -51,98 +68,44 @@ function RoleBasedRedirect() {
 }
 
 function AppRoutes() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  // Ainda carregando auth? Não renderiza rotas ainda
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-4xl animate-pulse">⏳</div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Login - se já logado, vai pra home */}
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/forbidden" element={<Forbidden />} />
 
-      {/* Role-based redirect */}
+      {/* Home - redireciona baseado no role */}
       <Route path="/" element={<RoleBasedRedirect />} />
 
-      {/* Admin routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/tickets"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminTickets />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/users"
-        element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <AdminUsers />
-          </ProtectedRoute>
-        }
-      />
+      {/* Admin */}
+      <Route path="/admin" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/admin/tickets" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminTickets /></ProtectedRoute>} />
+      <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdminUsers /></ProtectedRoute>} />
 
-      {/* Tech routes */}
-      <Route
-        path="/tech"
-        element={
-          <ProtectedRoute allowedRoles={['TECH']}>
-            <TechDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tech/tickets"
-        element={
-          <ProtectedRoute allowedRoles={['TECH']}>
-            <TechTickets />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/tech/queue"
-        element={
-          <ProtectedRoute allowedRoles={['TECH']}>
-            <TechQueue />
-          </ProtectedRoute>
-        }
-      />
+      {/* Tech */}
+      <Route path="/tech" element={<ProtectedRoute allowedRoles={['TECH']}><TechDashboard /></ProtectedRoute>} />
+      <Route path="/tech/tickets" element={<ProtectedRoute allowedRoles={['TECH']}><TechTickets /></ProtectedRoute>} />
+      <Route path="/tech/queue" element={<ProtectedRoute allowedRoles={['TECH']}><TechQueue /></ProtectedRoute>} />
 
-      {/* Customer routes */}
-      <Route
-        path="/customer"
-        element={
-          <ProtectedRoute allowedRoles={['CUSTOMER']}>
-            <CustomerDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/customer/tickets"
-        element={
-          <ProtectedRoute allowedRoles={['CUSTOMER']}>
-            <CustomerTickets />
-          </ProtectedRoute>
-        }
-      />
+      {/* Customer */}
+      <Route path="/customer" element={<ProtectedRoute allowedRoles={['CUSTOMER']}><CustomerDashboard /></ProtectedRoute>} />
+      <Route path="/customer/tickets" element={<ProtectedRoute allowedRoles={['CUSTOMER']}><CustomerTickets /></ProtectedRoute>} />
 
-      {/* Shared routes */}
-      <Route
-        path="/tickets/:id"
-        element={
-          <ProtectedRoute>
-            <TicketDetail />
-          </ProtectedRoute>
-        }
-      />
+      {/* Detalhe do ticket - qualquer role logado */}
+      <Route path="/tickets/:id" element={<ProtectedRoute><TicketDetail /></ProtectedRoute>} />
 
-      {/* Catch-all */}
+      {/* 404 */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
