@@ -1,21 +1,19 @@
-import { cn } from '@/lib/utils';
 import { TicketPriority, PRIORITY_LABELS } from '@/types/database';
 
-interface PriorityBadgeProps {
+interface Props {
   priority: TicketPriority;
-  className?: string;
 }
 
-const priorityClasses: Record<TicketPriority, string> = {
-  LOW: 'priority-low',
-  MEDIUM: 'priority-medium',
-  HIGH: 'priority-high',
-  URGENT: 'priority-urgent',
-};
+export function PriorityBadge({ priority }: Props) {
+  const colors: Record<TicketPriority, string> = {
+    LOW: 'bg-muted text-muted-foreground border-border',
+    MEDIUM: 'bg-primary/20 text-primary border-primary/30',
+    HIGH: 'bg-warning/20 text-warning border-warning/30',
+    URGENT: 'bg-destructive/20 text-destructive border-destructive/30',
+  };
 
-export function PriorityBadge({ priority, className }: PriorityBadgeProps) {
   return (
-    <span className={cn('status-badge', priorityClasses[priority], className)}>
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${colors[priority]}`}>
       {PRIORITY_LABELS[priority]}
     </span>
   );
